@@ -1,12 +1,11 @@
 # CookingTimePredictor
-## Предсказание времени приготовления блюда по названию, описанию, ингредиентам и шагам приготовления.
+## Предсказание времени приготовления блюда по названию, описанию, ингредиентам и шагам приготовления
 
 ML-пайплайн полного цикла: от сбора данных с [кулинарного сайта](https://foodnetwork.co.uk) до обучения и тестирования модели и сохранения артефакта.
 
-![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=flat-square&logo=python&logoColor=white)
-![scikit-learn](https://img.shields.io/badge/scikit--learn-1.x-F7931E?style=flat-square&logo=scikitlearn&logoColor=white)
-![pandas](https://img.shields.io/badge/pandas-2.x-150458?style=flat-square&logo=pandas&logoColor=white)
-![MAE](https://img.shields.io/badge/MAE-10.38%20min-2ea44f?style=flat-square)
+![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)
+![scikit-learn](https://img.shields.io/badge/scikit--learn-F7931E?style=flat-square&logo=scikitlearn&logoColor=white)
+![pandas](https://img.shields.io/badge/pandas-150458?style=flat-square&logo=pandas&logoColor=white)
 
 **Кратко:** Random Forest (RF) по логарифмированному таргету: **MAE 10.38 мин** (Median AE 6.92). Для блюд с временем приготовления до 1 часа более 90% предсказаний имеют ошибку в пределах 20 минут. Данные: ~2500 рецептов, спаршенных с сайта foodnetwork.co.uk. Полную документацию см. в [docs/artifacts_doc.md](docs/artifacts_doc.md).
 
@@ -24,6 +23,7 @@ ML-пайплайн полного цикла: от сбора данных с [
 | RMSE | Чувствительна к длинному правому хвосту выбросов |
 | Median AE | Устойчива к выбросам |
 | R^2 | Доля объясненной моделью вариации таргета |
+
 Подробнее см. в [docs/artifacts_doc.md](docs/artifacts_doc.md).
 
 
@@ -45,6 +45,7 @@ ML-пайплайн полного цикла: от сбора данных с [
 | ![Распределение таргета](figures/eda_plots/total_time_minutes_histplot.png) | ![Выбросы](figures/eda_plots/total_time_minutes_boxplot.png) |
 |:--:|:--:|
 | Сильный дисбаланс времени пригтовления в минутах (= таргета) | Медиана лежит чуть выше 25 минут при длинном верхнем усике и множестве выбросов сверху |
+
 Подробнее см. в [docs/artifacts_doc.md](docs/artifacts_doc.md).
 
 
@@ -61,9 +62,8 @@ ML-пайплайн полного цикла: от сбора данных с [
 
 
 ## Пайплайн
-```
 парсинг -> предобработка и очистка данныз -> EDA и разделение (80/20) -> feature engineering + кодирование -> hyperparameter tuning (с 3-fold cross-val) -> обучение модели -> тестирование и вывод метрик -> сохранение обученной модели в models/model.joblib
-```
+
 Подробнее см. в [docs/artifacts_doc.md](docs/artifacts_doc.md).
 
 
@@ -72,8 +72,10 @@ ML-пайплайн полного цикла: от сбора данных с [
 - **Выбор модели:** производитлись тестирования с ансамлем: VotingRegressor из RF + линейная + KNN (результаты: MAE > 15 мин и R^2 < 0.5; поочередное исключение моделей показало превосходство RF (~12 мин даже без hyperparam tuning). Gradient Boosting обучен для сравнения – RF стабильнее, особенно на долго готовящихся блюдах.
 - **Гиперпараметры:** hyperparameter tuning с 3-fold cross-val: `n_estimators=500`, `max_depth=None`, `min_samples_leaf=3`.
 
-Feature importannces
-<img src="figures/results/feature_importances.png">
+| ![Feature importannces](figures/results/feature_importances.png)> |
+|:--:|
+| Feature importannces |
+
 Подробнее см. в [docs/artifacts_doc.md](docs/artifacts_doc.md).
 
 
@@ -81,8 +83,10 @@ Feature importannces
 - Модель склонна занижать время для блюд дольше ~80 минут (среди топ-10 ошибок почти все – занижения): следствие дисбаланса таргета.
 - Остатки образуют своеобразную воронку (т.е. не имеют систематического смещения => ошибка случайна)
 
-Граифики ошибок
-<img src="figures/results/residual_analysis.png">
+| ![Граифики ошибок](figures/results/residual_analysis.png) |
+|:--:|
+| Граифики ошибок |
+
 Подробнее см. в [docs/artifacts_doc.md](docs/artifacts_doc.md).
 
 
