@@ -12,6 +12,8 @@ import os
 
 # IMPORTANT: on cooking websites, it's a common thing when recipes are presented in a form of a <meta> tag containing all the needed informataion (cooking time, ingredients, recipe steps, ...) - individual pieces of info are marked with "@" (this is all done for SEO). so, keepig that in mind, the extarction of this data will be dealing with that <meta> tag
 
+os.makedirs("data", exist_ok=True)
+
 # collecting URLs
 def get_foodnetwork_uk_urls(
     start_page=2, 
@@ -47,7 +49,7 @@ def get_foodnetwork_uk_urls(
             print(f"ERROR AT PAGE {page}: {e}")
             continue
 
-    with open("foodnetwork_uk_urls.txt", "a", encoding="utf-8") as f:  # mode = "a" so that new URLS can be added over time (if needed)
+    with open("data/foodnetwork_uk_urls.txt", "a", encoding="utf-8") as f:  # mode = "a" so that new URLS can be added over time (if needed)
         for u in urls:
             f.write(u + "\n")
     print()
@@ -399,11 +401,11 @@ def save_df_with_backup(df, filepath):
 ### MAIN PARSING PIPELINE
 def main_pipeline(
     chunk_size=100,  # size of URL chink (how many urls should me processed before appending to the dataframe file)
-    output_file="df_parsed_recipes.csv",
+    output_file="data/df_parsed_recipes.csv",
     start_from_url="https://foodnetwork.co.uk/recipes/yucatan-chicken-skewers-with-peanut-red-chile-bbq-sauce-and-red-cabbage-slaw"  # to resume parsing form a specific URl 
 ):
     try:
-        with open("foodnetwork_uk_urls.txt", "r", encoding="utf-8") as f:
+        with open("data/foodnetwork_uk_urls.txt", "r", encoding="utf-8") as f:
             all_urls = [ line.strip() for line in f if line.strip() ]
         print(f"tota: {len(all_urls)} urls loaded")
         
@@ -511,12 +513,12 @@ def main_pipeline(
 
 ### LAUCNCHING THE PROCESS
 CHUNK_SIZE = 100
-OUTPUT_FILE = "df_parsed_recipes.csv"
+OUTPUT_FILE = "data/df_parsed_recipes.csv"
 
 get_foodnetwork_uk_urls()
 
 try:
-    with open("foodnetwork_uk_urls.txt", "r", encoding="utf-8") as f:
+    with open("data/foodnetwork_uk_urls.txt", "r", encoding="utf-8") as f:
         all_urls = [line.strip() for line in f if line.strip()]
     print(f"loaded {len(all_urls)} URLs")
     

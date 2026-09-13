@@ -8,11 +8,14 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import cross_val_score
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+from sklearn import __version__ as sk_version
+import joblib
+from pathlib import Path
 
 
 SEED = 123
 
-df = pd.read_csv("df_ready.csv")
+df = pd.read_csv("data/df_ready.csv")
 df.dropna(subset=["description", "category"], inplace=True)
 df.drop(columns=["Unnamed: 0"], inplace=True)
 
@@ -47,7 +50,7 @@ print(len([
     dot for dot in df[ df["step_words_count"].notna() ]["step_words_count"] \
     if dot > mx
 ]))  # number of outliers (of the top whisker)
-plt.savefig("plot1.png")
+plt.savefig("figures/eda_plots/step_words_count_boxplot.png")
 
 
 
@@ -157,9 +160,7 @@ print(df.shape)
 # dropping rows where thre's only 1 value in  a "category" group (will come in handy during splittign)
 val_counts = dict(df["category"].value_counts())
 print(val_counts)
-df = df[~df["category"].isin([
-    [categ for categ in val_counts.keys() if val_counts[categ] == val][0] for val in list(val_counts.values()) if val <= 1
-])]
+df = df[df["category"].map(val_counts) > 1]
 print(df.shape)
 print(df.columns)
 
@@ -327,7 +328,7 @@ grid = GridSearchCV(
 
 grid.fit(X_train, y_train_log)
 
-print(f"best params: {grid.best_params_}")  # best params {'max_depth': 12, 'max_features': None, 'min_samples_leaf': 3, 'n_estimators': 500}
+print(f"best params: {grid.best_params_}")  # best params {'max_depth': None, 'max_features': None, 'min_samples_leaf': 3, 'n_estimators': 500}
 print(f"best cross-val MAE (LOGARITHMIC!!!): {(-grid.best_score_):.3f}")
 
 # evaluating performance on test set
@@ -358,17 +359,17 @@ y_pred_log = rf.predict(X_test)
 y_pred = np.expm1(y_pred_log)
 
 # metrcis + evauation
-mae = mean_absolute_error(y_test, y_pred)
-rmse = np.sqrt(mean_squared_error(y_test, y_pred))
-r2 = r2_score(y_test, y_pred)
-median_ae = np.median(np.abs(y_test - y_pred))
+mae_global = mean_absolute_error(y_test, y_pred)
+rmse_global = np.sqrt(mean_squared_error(y_test, y_pred))
+r2_global = r2_score(y_test, y_pred)
+median_ae_global = np.median(np.abs(y_test - y_pred))
 
 print()
 print("GLOBAL METRCIS RESULTS:")  # global metrics
-print(f"MAE:       {mae:.2f} minutes")
-print(f"RMSE:      {rmse:.2f} minutes")
-print(f"R^2:       {r2:.3f}")
-print(f"Median AE: {median_ae:.2f} minutes")
+print(f"MAE:       {mae_global:.2f} minutes")
+print(f"RMSE:      {rmse_global:.2f} minutes")
+print(f"R^2:       {r2_global:.3f}")
+print(f"Median AE: {median_ae_global:.2f} minutes")
 
 
 
@@ -403,12 +404,36 @@ for low, high, label in chunks:
         print(f"{label:12s} (n={n:3d}): MAE={mae:5.1f} min, Median={median:5.1f} minutes, witihin 20 minutes={within_20:5.1f}%")  # "within 20 minutes" = percentage of vlaues where error is <20 minutes
 
 
-
 # 10 worst predictions
 print()
 print("10 LARGEST ERRORS:")
 print( eval_df.sort_values("error", ascending=False).head(10).to_string() )
 
 
+# saving trained model and all associated metadata to be used later
+trained_model_data = {
+    "model": rf,
+    "feature_order": X_train.columns.tolist(),
+    "target_transform": "log1p",
+    "metrics": {
+        "mae": mae_global,
+        "rmse": rmse_global,
+        "median_ae": median_ae_global
+    },
+    "model_params": rf.get_params(),
+    "sklearn_version": sk_version,
+    "preprocess": {
+        "category_dict": sorted(categs),
+        "heat_types": sorted(heat_types),
+        "servings_medians_by_category": train_medians,
+        "servings_global_median": global_median,  # gloabl median (to be used on a new set of recipes) 
+        "step_count_imputer": step_count_imputer,
+        "step_words_clipping_range": (20, mx_train),  # range for imputed step_words
+    },
+}
+
+MODEL_DIR = Path("models")
+MODEL_DIR.mkdir(parents=True, exist_ok=True)
+joblib.dump(trained_model_data, MODEL_DIR / "model.joblib", compress=3)
 
 

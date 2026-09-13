@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 ### === PREPROCESSING PARSED DF INTO READY-TO-USE FORM (imputation and feture engineering see in main_train.py) ===
 
-df = pd.read_csv("df_parsed_recipes.csv")
+df = pd.read_csv("data/df_parsed_recipes.csv")
 print(df.head())
 print(df.columns)
 
@@ -77,4 +77,4 @@ print(df.isna().sum())
 print(df.dtypes)
 print()
 print(df.head())
-df.to_csv("df_ready.csv")
+df.to_csv("data/df_ready.csv")
